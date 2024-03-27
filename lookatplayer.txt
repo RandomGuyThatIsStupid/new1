@@ -1,0 +1,49 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local localPlayer = Players.LocalPlayer
+local minimumDistance = 0
+local maximumDistance = 25 -- Set maximum distance to 10 studs
+
+local function distanceBetween(p1, p2)
+    return (p1.Position - p2.Position).magnitude
+end
+
+local function executeCodeIfNearby()
+    local localCharacter = localPlayer.Character
+    if not localCharacter then return end -- If the local player's character is not loaded, exit the function
+
+    local localPrimaryPart = localCharacter.PrimaryPart
+    if not localPrimaryPart then return end -- If the local player's character doesn't have a primary part, exit the function
+
+    local closestPlayer = nil
+    local closestDistance = maximumDistance + 1 -- Initialize with a value greater than maximumDistance
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local playerCharacter = player.Character
+            if playerCharacter then
+                local playerPrimaryPart = playerCharacter.PrimaryPart
+                if playerPrimaryPart then
+                    local dist = distanceBetween(localPrimaryPart, playerPrimaryPart)
+                    if dist <= maximumDistance and dist < closestDistance then
+                        closestPlayer = player
+                        closestDistance = dist
+                    end
+                end
+            end
+        end
+    end
+
+    if closestPlayer then
+        -- Make the local character look at the closest player
+        local direction = (closestPlayer.Character.PrimaryPart.Position - localPrimaryPart.Position).unit
+        local newLookVector = Vector3.new(direction.X, 0, direction.Z)
+        localCharacter:SetPrimaryPartCFrame(CFrame.new(localPrimaryPart.Position, localPrimaryPart.Position + newLookVector))
+    end
+end
+
+-- Check if nearby players every 1 second
+while wait() do
+    executeCodeIfNearby()
+end
